@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>ROI — Impresoras RITON (Material 475 u/kg)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --ink:#1f2937;
+      --muted:#6b7280;
+      --acc:#ff2f6b;
+      --stroke:rgba(16,24,40,0.12);
+      --ring:rgba(255,47,107,.15);
+    }
+    html,body{
+      background:var(--bg);
+      color:var(--ink);
+      font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      margin:0;padding:0;
+    }
+    .wrap{max-width:1200px;margin:28px auto;padding:0 16px;}
+
+    /* Topbar logos */
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:18px;
+    }
+    .topbar-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .topbar-title{
+      font-size:13px;
+      color:var(--muted);
+    }
+    .topbar img{
+      max-height:62px;
+      object-fit:contain;
+    }
+
+    h1{font-weight:700;letter-spacing:.2px;margin:0 0 8px;font-size:28px}
+    p.lead{color:var(--muted);margin:0 0 12px;}
+
+    .intro{
+      margin-top:8px;
+      margin-bottom:16px;
+    }
+
+    .badge{
+      display:inline-block;
+      border:1px solid #ffe1ec;
+      background:#fff;
+      border-radius:999px;
+      padding:6px 10px;
+      color:#ff2f6b;
+      font-size:12px;
+      margin-right:6px;
+    }
+
+    /* Fila con tarjeta + imagen */
+    .top-layout {
+      display:flex;
+      flex-direction:row;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:32px;
+      margin-bottom:24px;
+    }
+
+    /* Tarjeta de parámetros */
+    .card{
+      background:var(--card);
+      border:1px solid var(--stroke);
+      border-radius:20px;
+      padding:18px 20px;
+      box-shadow:0 10px 28px rgba(16,24,40,.10);
+    }
+    .param-card{
+      flex:1;
+      max-width:620px;
+    }
+
+    /* Contenedor de la imagen */
+    .hero-img-container{
+      flex:1;
+      display:flex;
+      justify-content:flex-end;
+    }
+    .hero-img{
+      width:100%;
+      max-width:650px;
+      height:auto;
+      border-radius:20px;
+      object-fit:cover;
+      box-shadow:0 8px 22px rgba(0,0,0,0.12);
+    }
+
+    .inputs{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:14px;
+    }
+    .inp label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+    .inp input,.inp select{
+      width:94%;
+      background:#fff;
+      border:1px solid #e5e7eb;
+      color:var(--ink);
+      padding:14px;
+      border-radius:12px;
+      font-size:15px;
+    }
+    .inp input:focus,.inp select:focus{
+      outline:none;
+      box-shadow:0 0 0 4px var(--ring);
+      border-color:var(--acc);
+    }
+    .hint-fixed{
+      font-size:13px;
+      color:#ff2f6b;
+      margin-top:4px;
+    }
+
+    .table-card{
+      padding:18px;
+      border-radius:18px;
+      background:var(--card);
+      border:1px solid var(--stroke);
+      box-shadow:0 8px 24px rgba(16,24,40,.08);
+      margin-top:10px;
+    }
+    .table-over{
+      overflow-x:auto;
+      overflow-y:visible;
+      min-height:320px;
+    }
+    table.fixed{
+      table-layout:auto;
+      width:100%;
+      height:auto;
+      font-size:0.92rem;
+      line-height:1.35;
+      border-collapse:collapse;
+    }
+    th{
+      font-size:11px;
+      color:#6b7280;
+      text-align:center;
+      letter-spacing:.2px;
+      white-space:nowrap;
+    }
+    td,th{
+      padding:8px 12px;
+      border-bottom:1px solid #eef2f7;
+    }
+    tbody tr:nth-child(even){background:#fafafa;}
+    tbody tr:hover{background:#f3f4f6;}
+    td.num,th.num{
+      text-align:right;
+      font-variant-numeric:tabular-nums;
+    }
+    td.num.positive{color:#16a34a;}
+    td.num.negative{color:#ef4444;}
+
+    /* Tooltips en encabezados */
+    th[data-tip]{
+      position:relative;
+      cursor:help;
+    }
+    th[data-tip]:hover::after{
+      content:attr(data-tip);
+      position:absolute;
+      z-index:40;
+      left:50%;
+      top:100%;
+      transform:translateX(-50%);
+      margin-top:6px;
+      background:#111827;
+      color:#f9fafb;
+      padding:6px 8px;
+      border-radius:6px;
+      font-size:11px;
+      max-width:260px;
+      white-space:normal;
+      box-shadow:0 8px 20px rgba(15,23,42,0.45);
+    }
+    th[data-tip]:hover::before{
+      content:'';
+      position:absolute;
+      z-index:41;
+      left:50%;
+      top:100%;
+      transform:translateX(-50%);
+      margin-top:1px;
+      border-width:6px;
+      border-style:solid;
+      border-color:transparent transparent #111827 transparent;
+    }
+
+    .sum-card{margin-top:16px;}
+    .sum-row{
+      display:flex;
+      justify-content:space-between;
+      margin:2px 0;
+      font-size:14px;
+    }
+
+    .charts{
+      display:flex;
+      flex-direction:column;
+      gap:26px;
+      margin-top:30px;
+    }
+    .chart{
+      border-radius:18px;
+      box-shadow:0 8px 24px rgba(16,24,40,.08);
+      background:var(--card);
+      border:1px solid var(--stroke);
+      padding:12px 14px;
+    }
+    .chart h4{
+      margin:0 0 6px;
+      font-weight:600;
+      font-size:13px;
+      color:#4b5563;
+    }
+    .chart .meta{
+      font-size:12px;
+      color:#ff2f6b;
+      background:#fff;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid #ffe1ec;
+      float:right;
+    }
+    .chart canvas{
+      width:100% !important;
+      height:240px !important;
+      display:block;
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Barra superior con logos -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <img src="logo-mdc.png" alt="MDC Digital">
+      <div class="topbar-title">
+        MDC DIGITAL · Comparador de ROI para impresoras metálicas
+      </div>
+    </div>
+    <div class="topbar-right">
+      <img src="logo-riton.png" alt="RITON Metal Printers">
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="intro">
+    <h1>Comparador de ROI — Impresoras <span style="color:var(--acc)">RITON</span></h1>
+    <p class="lead">
+      Ingrese el escenario semanal (unitarias, removibles y barras).<br>
+    </p>
+    <div>
+      <span class="badge">Impresoras de metal RITON</span>
+      <span class="badge">Costo por material real</span>
+      <span class="badge">Pensado para planear tu próxima compra</span>
+    </div>
+  </div>
+
+  <!-- Layout: tarjeta de parámetros + imagen -->
+  <div class="top-layout">
+
+    <!-- Tarjeta de parámetros -->
+    <div class="card param-card">
+      <div class="inputs">
+        <div class="inp">
+          <label>Tipo de cambio USD/MXN</label>
+          <input id="tipoCambio" type="number" value="19.50" step="0.01" min="1">
+        </div>
+        <div class="inp">
+          <label>Pago operador semanal (MXN)</label>
+          <input id="pagoOperador" type="number" value="5000" step="1" min="0">
+        </div>
+        <div class="inp">
+          <label>Precio kWh (MXN)</label>
+          <input id="precioKwh" type="number" value="5" step="0.1" min="0">
+        </div>
+        <div class="inp">
+          <label>Sinterizado por lote (horas)</label>
+          <input id="tSinter" type="number" value="4" step="0.1" min="0">
+          <div class="hint-fixed">Incluye sinterizado + horno 2 kW</div>
+        </div>
+        <div class="inp">
+          <label>Potencia horno (kW)</label>
+          <input id="kwHorno" type="number" value="2.0" disabled>
+        </div>
+        <div class="inp">
+          <label># unitarias / semana</label>
+          <input id="qUnit" type="number" value="40" step="1" min="0">
+        </div>
+        <div class="inp">
+          <label>Precio venta unitaria (MXN)</label>
+          <input id="pUnit" type="number" value="500" step="1" min="0">
+        </div>
+        <div class="inp">
+          <label># removibles / semana</label>
+          <input id="qRem" type="number" value="2" step="1" min="0">
+        </div>
+        <div class="inp">
+          <label>Precio venta removible (MXN)</label>
+          <input id="pRem" type="number" value="3500" step="1" min="0">
+        </div>
+        <div class="inp">
+          <label># barras / semana</label>
+          <input id="qBar" type="number" value="1" step="1" min="0">
+        </div>
+        <div class="inp">
+          <label>Precio venta barra (MXN)</label>
+          <input id="pBar" type="number" value="6500" step="1" min="0">
+        </div>
+      </div>
+    </div>
+
+    <!-- Imagen grande a la derecha -->
+    <div class="hero-img-container">
+      <img src="assets/hero-riton-metal-build.png" alt="Riton Build" class="hero-img">
+    </div>
+
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-card">
+    <div class="table-over">
+      <table id="tbl" class="fixed">
+        <thead>
+        <tr>
+          <th data-tip="Fabricante de la impresora.">Marca</th>
+          <th data-tip="Modelo específico de la impresora metálica.">Modelo</th>
+          <th data-tip="Tipo de aleación con la que se está calculando (Cromo Cobalto o Titanio).">Polvo</th>
+
+          <th class="num" data-tip="Precio público estimado de la impresora en MXN, sin IVA">
+            Precio público (MXN)
+          </th>
+          <th class="num" data-tip="Horas promedio de vida útil del láser antes de necesitar reemplazo.">
+            Vida láser (h)
+          </th>
+          <th class="num" data-tip="Unidades que puede imprimir por hora, considerando solo el tiempo de impresión.">
+            Unid/hora (impresión)
+          </th>
+          <th class="num" data-tip="Consumo eléctrico nominal de la impresora durante el proceso de impresión.">
+            kW impresora
+          </th>
+
+          <th class="num" data-tip="Costo de material por unidad (MXN) usando rendimiento de 475 coronas por kilo de polvo.">
+            Mat/u
+          </th>
+          <th class="num" data-tip="Costo de energía eléctrica por unidad (MXN), sumando impresora + horno de sinterizado.">
+            Energía/u
+          </th>
+          <th class="num" data-tip="Costos prorrateados por unidad (láser, rectificado, argón, operador, etc.).">
+            Prorrateo/u
+          </th>
+
+          <th class="num" data-tip="Suma de material + energía + prorrateo por pieza unitaria.">
+            Costo/u
+          </th>
+          <th class="num" data-tip="Costo total de una prótesis removible, considerando 8 unidades equivalentes.">
+            Costo/rem
+          </th>
+          <th class="num" data-tip="Costo total de una barra, considerando 10 unidades equivalentes.">
+            Costo/bar
+          </th>
+
+          <th class="num" data-tip="Suma de todos los costos por semana en el escenario de producción indicado.">
+            Costo/sem
+          </th>
+          <th class="num" data-tip="Ingresos menos costos por semana, según tus precios de venta y volúmenes.">
+            Ganancia/sem
+          </th>
+          <th class="num" data-tip="Años aproximados para recuperar la inversión de la impresora con la ganancia semanal calculada.">
+            ROI (años)
+          </th>
+        </tr>
+        </thead>
+        <tbody id="body"></tbody>
+      </table>
+    </div>
+    <div style="color:var(--muted);font-size:12px;margin-top:6px">
+      Material con rendimiento fijo <b>475 u/kg</b>. Removible = 8 u, barra = 10 u.<br>
+      Energía/u incluye impresora + horno 2 kW (sinterizado por lote).
+    </div>
+  </div>
+
+  <!-- Resumen -->
+  <div class="card sum-card" id="resume"></div>
+
+  <!-- Gráficas -->
+  <div class="charts">
+    <div class="chart">
+      <h4>ROI anual (años) <span class="meta" id="meta1">Incluye sinterizado: 4 h</span></h4>
+      <canvas id="cRoi"></canvas>
+    </div>
+    <div class="chart">
+      <h4>Ganancia semanal (MXN) <span class="meta" id="meta2">Incluye sinterizado: 4 h</span></h4>
+      <canvas id="cGan"></canvas>
+    </div>
+    <div class="chart">
+      <h4>Unidades por hora (efectiva) <span class="meta" id="meta3">Incluye sinterizado: 4 h</span></h4>
+      <canvas id="cUph"></canvas>
+    </div>
+    <div class="chart">
+      <h4>Horas para producir la demanda <span class="meta" id="meta4">Incluye sinterizado: 4 h</span></h4>
+      <canvas id="cTime"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+Chart.register(ChartDataLabels);
+
+const LASER_USD = 12000;
+const rendimiento = 475;
+const usdCrCo = 85;
+const usdTi   = 150;
+const factorPolvo = 1.2 * 1.4;   // 20% import + 40% ganancia
+const factorMaquina = 1.2 * 1.4; // mismo criterio
+
+const models = [
+  // MLAB — 100 coronas en 3 h (2.5 h fastest case → usamos 3 h)
+  { sku:"RITON-MLAB-CRCO", modelo:"MLAB CrCo", marca:"Riton",
+    polvo:"Cromo",   costUsd:35000, kw:2.0, vida:100000,
+    batch:100, tPrint:3.0 },
+
+  { sku:"RITON-MLAB-TITA", modelo:"MLAB Ti",   marca:"Riton",
+    polvo:"Titanio", costUsd:45000, kw:2.0, vida:100000,
+    batch:100, tPrint:3.0 },
+
+  // M150 — catálogo: 200 piezas en 4.5 h
+  { sku:"RITON-M150-CRCO", modelo:"M150 CrCo", marca:"Riton",
+    polvo:"Cromo",   costUsd:40000, kw:3.0, vida:100000,
+    batch:200, tPrint:4.5 },
+
+  { sku:"RITON-M150-TITA", modelo:"M150 Ti",   marca:"Riton",
+    polvo:"Titanio", costUsd:50000, kw:3.0, vida:100000,
+    batch:200, tPrint:4.5 },
+
+  { sku:"RITON-M150-PC",   modelo:"M150 PC",   marca:"Riton",
+    polvo:"Titanio", costUsd:52000, kw:3.0, vida:100000,
+    batch:200, tPrint:4.5, selectable:true },
+
+  // M150D — asumimos 200 piezas en ~3 h por doble láser
+  { sku:"RITON-M150D-CRCO",modelo:"M150D CrCo",marca:"Riton",
+    polvo:"Cromo",   costUsd:70000, kw:4.0, vida:120000,
+    batch:200, tPrint:3.0 },
+
+  { sku:"RITON-M150D-TITA",modelo:"M150D Ti",  marca:"Riton",
+    polvo:"Titanio", costUsd:80000, kw:4.0, vida:120000,
+    batch:200, tPrint:3.0 },
+
+  { sku:"RITON-M150D-PC",  modelo:"M150D PC",  marca:"Riton",
+    polvo:"Titanio", costUsd:82000, kw:4.0, vida:120000,
+    batch:200, tPrint:3.0, selectable:true },
+
+  // M200D — catálogo: 430 piezas en 5.5 h
+  { sku:"RITON-M200D-CRCO",modelo:"M200D CrCo",marca:"Riton",
+    polvo:"Cromo",   costUsd:85000, kw:4.0, vida:120000,
+    batch:430, tPrint:5.5 },
+
+  { sku:"RITON-M200D-TITA",modelo:"M200D Ti",  marca:"Riton",
+    polvo:"Titanio", costUsd:95000, kw:4.0, vida:120000,
+    batch:430, tPrint:5.5 }
+];
+
+const $ = id => document.getElementById(id);
+const fmt = n => (isFinite(n)? n:0).toLocaleString('es-MX',{style:'currency',currency:'MXN'});
+const clamp = n => Math.max(0, +n || 0);
+
+function fitCanvas(id){
+  const c = $(id);
+  const parent = c.parentElement;
+  const w = Math.max(300, parent.clientWidth);
+  c.width = w;
+  c.height = 240;
+  return c.getContext('2d');
+}
+
+function getInputs(){
+  const tc = clamp($('tipoCambio').value);
+  const po = clamp($('pagoOperador').value);
+  const kwh= clamp($('precioKwh').value);
+  const ts = clamp($('tSinter').value);
+  const cu = clamp($('qUnit').value),  pu = clamp($('pUnit').value);
+  const cr = clamp($('qRem').value),   pr = clamp($('pRem').value);
+  const cb = clamp($('qBar').value),   pb = clamp($('pBar').value);
+  return {tc,po,kwh,ts,cu,pu,cr,pr,cb,pb};
+}
+
+let roiChart, ganChart, uphChart, timeChart;
+
+function render(){
+  const X = getInputs();
+  const fU = 1, fR = 8, fB = 10;
+  const totalEq = X.cu*fU + X.cr*fR + X.cb*fB;
+
+  const ventas = X.cu*X.pu + X.cr*X.pr + X.cb*X.pb;
+  $('resume').innerHTML =
+    '<div class="sum-row"><span>Venta semanal estimada:</span><b>'+fmt(ventas)+'</b></div>'+
+    '<div class="sum-row"><span>Equivalentes de producción:</span><b>'+(totalEq||0).toFixed(0)+' u</b></div>'+
+    '<div class="sum-row" style="color:var(--muted);font-size:12px">Sinterizado de <b>'+X.ts+'</b> h por lote · Horno fijo de <b>2 kW</b>.</div>';
+
+  ['meta1','meta2','meta3','meta4'].forEach(id=>{
+    const el = $(id);
+    if(el) el.textContent = 'Incluye sinterizado: '+X.ts+' h';
+  });
+
+  const tbody = $('body');
+  tbody.innerHTML = '';
+
+  const labels = [], rois = [], gans = [], uphs = [], hours = [];
+
+  models.forEach((m, idx)=>{
+    const publico = m.costUsd * X.tc * factorMaquina;
+
+    const uph = m.batch / (m.tPrint || 1);
+
+    const energiaImpEq = (m.kw * m.tPrint / m.batch) * X.kwh;
+    const energiaHorEq = (2.0 * X.ts / m.batch) * X.kwh;
+    const energiaEq = energiaImpEq + energiaHorEq;
+
+    const precioKg = (m.polvo === 'Cromo' ? usdCrCo : usdTi) * factorPolvo * X.tc;
+    const matEq = precioKg / rendimiento;
+
+    const batches = totalEq>0 ? Math.ceil(totalEq / m.batch) : 0;
+    const horasSem = batches * (m.tPrint + X.ts);
+
+    const costoLaserSem = (horasSem / m.vida) * (LASER_USD * X.tc);
+    const rectSem = batches * 200;
+    const argonSem = (m.polvo === 'Titanio') ? 2000 * batches : 0;
+    const prorrEq = totalEq>0 ? (costoLaserSem + rectSem + argonSem + X.po) / totalEq : 0;
+
+    const baseEq = matEq + energiaEq + prorrEq;
+    const cU = baseEq * fU;
+    const cR = baseEq * fR;
+    const cB = baseEq * fB;
+
+    const costoSem = cU*X.cu + cR*X.cr + cB*X.cb;
+    const ganSem = ventas - costoSem;
+    const roiA = ganSem>0 ? (publico / (ganSem * 52)) : Infinity;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>'+m.marca+'</td>'+
+      '<td>'+m.modelo+'</td>'+
+      '<td>'+(
+        m.selectable
+          ? '<select data-idx="'+idx+'" style="background:#fff;color:var(--ink);border:1px solid #e5e7eb;border-radius:10px;padding:6px 8px">'+
+            '<option '+(m.polvo==='Titanio'?'selected':'')+'>Titanio</option>'+
+            '<option '+(m.polvo==='Cromo'?'selected':'')+'>Cromo</option>'+
+            '</select>'
+          : m.polvo
+      )+'</td>'+
+      '<td class="num">'+fmt(publico)+'</td>'+
+      '<td class="num">'+m.vida.toLocaleString('es-MX')+'</td>'+
+      '<td class="num">'+uph.toFixed(2)+'</td>'+
+      '<td class="num">'+m.kw.toFixed(2)+'</td>'+
+      '<td class="num">'+fmt(matEq)+'</td>'+
+      '<td class="num">'+fmt(energiaEq)+'</td>'+
+      '<td class="num">'+fmt(prorrEq)+'</td>'+
+      '<td class="num">'+fmt(cU)+'</td>'+
+      '<td class="num">'+fmt(cR)+'</td>'+
+      '<td class="num">'+fmt(cB)+'</td>'+
+      '<td class="num">'+fmt(costoSem)+'</td>'+
+      '<td class="num '+(ganSem>0?'positive':(ganSem===0?'':'negative'))+'">'+fmt(ganSem)+'</td>'+
+      '<td class="num">'+(isFinite(roiA)? roiA.toFixed(2) : '∞')+'</td>';
+    tbody.appendChild(tr);
+
+    const sel = tr.querySelector('select');
+    if(sel){
+      sel.addEventListener('change', e=>{
+        models[idx].polvo = e.target.value;
+        render();
+      });
+    }
+
+    labels.push(m.modelo);
+    rois.push(isFinite(roiA)? roiA : null);
+    gans.push(ganSem);
+    uphs.push(uph);
+    hours.push(batches * (m.tPrint + X.ts));
+  });
+
+  drawCharts(labels, rois, gans, uphs, hours);
+}
+
+function drawCharts(labels, rois, gans, uphs, hours){
+  const colors = labels.map((_,i)=> i%2 ? 'rgba(255,99,132,0.75)' : 'rgba(99,179,237,0.75)');
+  const capacities = models.map(m=>m.batch);
+
+  if(roiChart) roiChart.destroy();
+  roiChart = new Chart(fitCanvas('cRoi'), {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{
+        label:'ROI (años)',
+        data:rois,
+        backgroundColor:colors,
+        borderRadius:6,
+        borderWidth:0
+      }]
+    },
+    options:{
+      responsive:false,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        datalabels:{
+          color:'#111827',
+          anchor:'end',
+          align:'top',
+          formatter:v => (v==null||!isFinite(v)) ? '∞' : v.toFixed(2),
+          font:{size:10}
+        }
+      },
+      scales:{
+        y:{beginAtZero:true,grid:{color:'#e9edf2'},ticks:{color:'#4b5563'}},
+        x:{grid:{color:'#eef2f7'},ticks:{color:'#4b5563',autoSkip:true,autoSkipPadding:6,maxRotation:0}}
+      }
+    },
+    plugins:[ChartDataLabels]
+  });
+
+  if(ganChart) ganChart.destroy();
+  ganChart = new Chart(fitCanvas('cGan'), {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{
+        label:'Ganancia semanal',
+        data:gans,
+        backgroundColor:colors,
+        borderRadius:6,
+        borderWidth:0
+      }]
+    },
+    options:{
+      responsive:false,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        datalabels:{
+          color:'#111827',
+          anchor:'end',
+          align:'top',
+          formatter:v => v.toLocaleString('es-MX',{style:'currency',currency:'MXN'}),
+          font:{size:10}
+        }
+      },
+      scales:{
+        y:{beginAtZero:true,grid:{color:'#e9edf2'},ticks:{color:'#4b5563'}},
+        x:{grid:{color:'#eef2f7'},ticks:{color:'#4b5563',autoSkip:true,autoSkipPadding:6,maxRotation:0}}
+      }
+    },
+    plugins:[ChartDataLabels]
+  });
+
+  if(uphChart) uphChart.destroy();
+  uphChart = new Chart(fitCanvas('cUph'), {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{
+        label:'Unidades por hora (efectiva)',
+        data:uphs,
+        backgroundColor:colors,
+        borderRadius:6,
+        borderWidth:0
+      }]
+    },
+    options:{
+      responsive:false,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label:function(ctx){
+              const v = ctx.parsed.y;
+              const cap = capacities[ctx.dataIndex];
+              return [
+                'Unidades por hora: ' + (isFinite(v)? v.toFixed(1) : '—'),
+                'Capacidad por lote: ' + cap + ' u'
+              ];
+            }
+          }
+        },
+        datalabels:{
+          labels:{
+            value:{
+              color:'#111827',
+              anchor:'end',
+              align:'top',
+              formatter:v => (isFinite(v)? v.toFixed(1)+' u/h' : '—'),
+              font:{size:10}
+            },
+            capacity:{
+              color:'#111827',
+              anchor:'end',
+              align:'top',
+              formatter:(v,ctx)=> capacities[ctx.dataIndex] + ' u/lote',
+              font:{size:9},
+              offset:14
+            }
+          }
+        }
+      },
+      scales:{
+        y:{beginAtZero:true,grid:{color:'#e9edf2'},ticks:{color:'#4b5563'}},
+        x:{grid:{color:'#eef2f7'},ticks:{color:'#4b5563',autoSkip:true,autoSkipPadding:6,maxRotation:0}}
+      }
+    },
+    plugins:[ChartDataLabels]
+  });
+
+  if(timeChart) timeChart.destroy();
+  timeChart = new Chart(fitCanvas('cTime'), {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {
+          label:'Horas para producir la demanda',
+          data:hours,
+          backgroundColor:colors,
+          borderRadius:6,
+          borderWidth:0
+        },
+        {
+          type:'line',
+          label:'Referencia 10 h',
+          data:labels.map(()=>10),
+          borderColor:'rgba(17,24,39,0.6)',
+          borderWidth:1,
+          borderDash:[6,4],
+          pointRadius:0,
+          fill:false
+        }
+      ]
+    },
+    options:{
+      responsive:false,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        datalabels:{
+          color:'#111827',
+          anchor:'end',
+          align:'top',
+          formatter:v => (isFinite(v)? v.toFixed(1)+' h' : '—'),
+          font:{size:10}
+        }
+      },
+      scales:{
+        y:{beginAtZero:true,grid:{color:'#e9edf2'},ticks:{color:'#4b5563'}},
+        x:{grid:{color:'#eef2f7'},ticks:{color:'#4b5563',autoSkip:true,autoSkipPadding:6,maxRotation:0}}
+      }
+    },
+    plugins:[ChartDataLabels]
+  });
+}
+
+['tipoCambio','pagoOperador','precioKwh','tSinter',
+ 'qUnit','pUnit','qRem','pRem','qBar','pBar'
+].forEach(id=>{
+  $(id).addEventListener('input', render);
+});
+
+render();
+</script>
+</body>
+</html>
